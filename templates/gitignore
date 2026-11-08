@@ -1,0 +1,5 @@
+.env
+.kit/
+__pycache__/
+*.pyc
+out/

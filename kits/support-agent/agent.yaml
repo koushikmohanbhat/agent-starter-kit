@@ -1,0 +1,37 @@
+# Support agent: the framework-neutral definition. Nothing environment-specific here; values come from .env.
+# Offline by default (scripted model, in-memory orders). See README.md to connect a real model and order system.
+name: support-agent
+description: Customer support for orders, refunds, address changes and escalation
+framework: "${AGENT_FRAMEWORK:-openai_agents}"         # openai_agents | langgraph | adk | strands
+model:
+  provider: "${MODEL_PROVIDER:-scripted}"               # scripted | openai | openai_compatible | anthropic | bedrock | gemini
+  name: "${MODEL_NAME:-}"
+  base_url: "${MODEL_BASE_URL:-}"                       # openai_compatible gateways
+  api_key_env: "${MODEL_API_KEY_ENV:-}"                 # name of the env var with the key (default: OPENAI_API_KEY / ANTHROPIC_API_KEY)
+  region: "${AWS_REGION:-}"
+  project: "${GOOGLE_CLOUD_PROJECT:-}"
+  location: "${GOOGLE_CLOUD_LOCATION:-}"
+  script: scripted_model:respond                        # used only when provider is scripted
+  settings: {temperature: 0.2}
+instructions: {prompt: support_agent, stage: "${PROMPT_STAGE:-prod}"}
+tools:
+  - tools.orders:lookup_order
+  - tools.orders:update_address
+  - tools.refunds:issue_refund
+  - tools.escalation:escalate_to_human
+policies:
+  - tool: issue_refund
+    require_approval_if: "args.amount > ${REFUND_APPROVAL_LIMIT:-5000}"
+    approver_role: support_lead
+    message: "refunds above the limit need a support lead's approval"
+limits: {max_turns: 12, max_tool_calls: 8, timeout_s: 60}
+session: {store: "${SESSION_STORE:-sqlite:///.kit/sessions.db}", ttl_hours: 72}
+services:
+  orders: orders_client:make_client                     # in-memory orders, or ORDER_API_URL for the mock / your API
+test_state: orders_client:turn_state                    # turn outcome for eval graders (KIT_TEST_MODE=true only)
+escalation:
+  tool: escalate_to_human
+  approval_messages:
+    approved: "Good news: your refund of ₹{amount:,.0f} for order {order_id} was approved and processed (refund {refund_id})."
+    rejected: "Your refund request for order {order_id} was reviewed and couldn't be approved. {decision_reason}"
+    error: "Your refund for order {order_id} was approved, but something went wrong processing it. A colleague will follow up."

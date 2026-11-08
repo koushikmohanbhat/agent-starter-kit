@@ -1,0 +1,64 @@
+name: ci
+on:
+  push: {branches: [main]}
+  pull_request: {}
+permissions: {contents: read}
+concurrency: {group: "ci-${{ github.ref }}", cancel-in-progress: true}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: {python: ["3.10", "3.12", "3.13"]}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "${{ matrix.python }}", cache: pip}
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests kits addon_files deploy
+      - run: pytest -q
+      - name: parity suite (all four frameworks, offline)
+        run: kit test --parity kits/support-agent
+      - name: dependency audit
+        if: matrix.python == '3.12'
+        run: pip install pip-audit && pip freeze --exclude agent-starter-kit > /tmp/req.txt && pip-audit -r /tmp/req.txt --no-deps --disable-pip --progress-spinner off
+
+  evals-addon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -e ".[openai,langgraph]" "genai-eval-framework @ git+https://github.com/koushikmohanbhat/genai-eval-framework"
+      - name: scaffold a project, add evals, serve in test mode, gate on the suite
+        env: {KIT_AUTH: api_key, KIT_API_KEYS: ci-key, KIT_TEST_MODE: "true", SESSION_STORE: "memory://", GENAI_EVALS_TOKEN_KEY: ci}
+        run: |
+          kit init /tmp/proj && kit add evals /tmp/proj
+          cd /tmp/proj
+          for fw in openai_agents langgraph; do
+            AGENT_FRAMEWORK=$fw kit serve . --port 8080 > /tmp/serve-$fw.log 2>&1 &
+            for i in $(seq 1 60); do curl -sf localhost:8080/readyz && break; sleep 1; done
+            AGENT_KIT_API_KEY=ci-key AGENT_KIT_EVAL_USER=cust-001 genai-evals run evals/suite.yaml --providers evals/providers.yaml --out out/$fw
+            kill %1; sleep 1
+          done
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t agent-kit:ci --build-arg EXTRAS=openai,langgraph,postgres,otel .
+      - name: container serves the API
+        run: |
+          docker run -d -p 8080:8080 -e KIT_AUTH=api_key -e KIT_API_KEYS=k -e SESSION_STORE=memory:// --name kit agent-kit:ci
+          for i in $(seq 1 30); do curl -sf localhost:8080/readyz && break; sleep 1; done
+          curl -sf localhost:8080/v1/chat -H 'X-API-Key: k' -H 'X-End-User-Id: cust-001' -H 'Content-Type: application/json' -d '{"message":"Where is ORD-10003?"}' | grep -q shipped
+
+  terraform:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: {module: [aws-ecs, gcp-cloud-run]}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - working-directory: deploy/terraform/${{ matrix.module }}
+        run: terraform fmt -check -diff && terraform init -backend=false && terraform validate

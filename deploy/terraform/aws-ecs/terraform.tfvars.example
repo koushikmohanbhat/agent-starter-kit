@@ -1,0 +1,19 @@
+region             = "<aws region, e.g. ap-south-1>"
+image              = "<account>.dkr.ecr.<region>.amazonaws.com/support-agent:<tag>"
+vpc_id             = "<vpc-...>"
+public_subnet_ids  = ["<subnet-...>", "<subnet-...>"]
+private_subnet_ids = ["<subnet-...>", "<subnet-...>"]
+certificate_arn    = "<arn:aws:acm:...>"
+environment = {
+  AGENT_FRAMEWORK  = "openai_agents"
+  MODEL_PROVIDER   = "openai"
+  MODEL_NAME       = "<model id>"
+  KIT_AUTH         = "oidc"
+  KIT_OIDC_ISSUER  = "<https://your-idp>"
+  KIT_OIDC_AUDIENCE = "<audience>"
+}
+secrets = {
+  OPENAI_API_KEY = "<arn:aws:secretsmanager:...:secret:openai-key>"
+  SESSION_STORE  = "<arn of a secret holding postgresql+psycopg://...>"
+  ORDER_API_TOKEN = "<arn:...>"
+}

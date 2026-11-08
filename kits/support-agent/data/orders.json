@@ -1,0 +1,10 @@
+{
+  "orders": [
+    {"order_id": "ORD-10001", "customer_id": "cust-001", "status": "delivered", "total": 1499.0, "currency": "INR", "items": ["Wireless mouse"], "delivered_on": "2026-10-28", "address": "4 Park Street, Kolkata"},
+    {"order_id": "ORD-10002", "customer_id": "cust-001", "status": "processing", "total": 2599.0, "currency": "INR", "items": ["Desk lamp"], "address": "4 Park Street, Kolkata"},
+    {"order_id": "ORD-10003", "customer_id": "cust-001", "status": "shipped", "total": 899.0, "currency": "INR", "items": ["Phone case"], "shipped_on": "2026-11-05", "address": "4 Park Street, Kolkata"},
+    {"order_id": "ORD-10004", "customer_id": "cust-001", "status": "delivered", "total": 12999.0, "currency": "INR", "items": ["Noise-cancelling headphones"], "delivered_on": "2026-11-01", "address": "4 Park Street, Kolkata"},
+    {"order_id": "ORD-10005", "customer_id": "cust-002", "status": "delivered", "total": 499.0, "currency": "INR", "items": ["USB cable"], "delivered_on": "2026-10-30", "address": "22 Residency Road, Bengaluru"},
+    {"order_id": "ORD-10006", "customer_id": "cust-001", "status": "cancelled", "total": 3499.0, "currency": "INR", "items": ["Backpack"], "address": "4 Park Street, Kolkata"}
+  ]
+}

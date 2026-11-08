@@ -1,0 +1,29 @@
+# GitHub Actions job: start the kit in test mode and gate the merge on the eval suite.
+# Copy to .github/workflows/evals.yml and adjust paths. Model settings come from repository variables / secrets.
+name: agent-evals
+on: {pull_request: {}}
+permissions: {contents: read}
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    env:
+      KIT_AUTH: api_key
+      KIT_API_KEYS: ${{ secrets.AGENT_KIT_EVAL_KEY }}
+      KIT_TEST_MODE: "true"
+      SESSION_STORE: "memory://"
+      AGENT_FRAMEWORK: ${{ vars.AGENT_FRAMEWORK || 'openai_agents' }}
+      MODEL_PROVIDER: ${{ vars.MODEL_PROVIDER || 'scripted' }}
+      MODEL_NAME: ${{ vars.MODEL_NAME }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      AGENT_KIT_API_KEY: ${{ secrets.AGENT_KIT_EVAL_KEY }}
+      AGENT_KIT_EVAL_USER: cust-001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install "agent-starter-kit[all,evals] @ git+https://github.com/koushikmohanbhat/agent-starter-kit@v0.1.0"
+      - run: (kit serve . --port 8080 &) && for i in $(seq 1 30); do curl -sf localhost:8080/readyz && break; sleep 1; done
+      - run: genai-evals run evals/suite.yaml --providers evals/providers.yaml --out out/evals
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: eval-report, path: out/evals}

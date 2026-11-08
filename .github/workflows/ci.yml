@@ -12,7 +12,7 @@ jobs:
       matrix: {python: ["3.10", "3.12", "3.13"]}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: {python-version: "${{ matrix.python }}", cache: pip}
       - run: pip install -e ".[dev]"
       - run: ruff check src tests kits addon_files deploy
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: {python-version: "3.12", cache: pip}
       - run: pip install -e ".[openai,langgraph]" "genai-eval-framework @ git+https://github.com/koushikmohanbhat/genai-eval-framework"
       - name: scaffold a project, add evals, serve in test mode, gate on the suite

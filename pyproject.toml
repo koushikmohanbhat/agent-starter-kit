@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-starter-kit"
+dynamic = ["version"]
+description = "Framework-neutral agent starter kit: define an agent once, run it on the OpenAI Agents SDK, LangGraph, Google ADK or Strands Agents behind one service API."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [{name = "Koushik Mohan"}]
+keywords = ["agents", "openai-agents", "langgraph", "google-adk", "strands-agents", "fastapi", "starter-kit"]
+classifiers = ["Programming Language :: Python :: 3", "Framework :: FastAPI", "Topic :: Software Development :: Libraries"]
+dependencies = [
+  "pydantic>=2.7,<3",
+  "pyyaml>=6",
+  "jinja2>=3.1",
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "httpx>=0.27",
+  "sqlalchemy>=2.0",
+  "pyjwt[crypto]>=2.8",
+]
+
+[project.optional-dependencies]
+openai = ["openai-agents>=0.24,<0.25"]
+litellm = ["openai-agents[litellm]>=0.24,<0.25"]
+langgraph = ["langgraph>=1.2,<2", "langchain-openai>=1.0,<2"]
+adk = ["google-adk>=2.14,<3; python_version >= '3.11'", "litellm>=1.70; python_version >= '3.11'"]   # ADK 2.12+ needs Python 3.11+
+strands = ["strands-agents[openai]>=1.64,<2"]
+anthropic = ["langchain-anthropic>=1.0,<2", "strands-agents[anthropic]>=1.64,<2"]
+bedrock = ["boto3>=1.35", "langchain-aws>=1.0,<2"]
+gemini = ["langchain-google-genai>=3.0,<4"]
+postgres = ["psycopg[binary]>=3.2"]
+otel = ["opentelemetry-api>=1.27", "opentelemetry-sdk>=1.27", "opentelemetry-exporter-otlp>=1.27"]
+connectors = ["mcp>=2.3,<3"]
+evals = ["genai-eval-framework @ git+https://github.com/koushikmohanbhat/genai-eval-framework"]
+all = ["agent-starter-kit[openai,langgraph,adk,strands,postgres,otel,connectors]"]
+dev = ["agent-starter-kit[all]", "pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.6"]
+
+[project.scripts]
+kit = "agent_kit.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/koushikmohanbhat/agent-starter-kit"
+
+[tool.hatch.version]
+path = "src/agent_kit/__init__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_kit"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"kits" = "agent_kit/kits"
+"addon_files" = "agent_kit/addon_files"
+"templates" = "agent_kit/templates"
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

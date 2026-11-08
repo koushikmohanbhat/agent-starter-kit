@@ -1,0 +1,5 @@
+# Offline judges (deterministic mocks). For real judges use the GenAI Eval Framework's providers.live.yaml and set
+# GENAI_EVALS_PROVIDERS, EVAL_JUDGE_A, EVAL_JUDGE_B (see the framework's docs/setup-*.md).
+profiles:
+  offline-judge-a: {provider: mock, model: heuristic-judge-a, family: openai, options: {mode: judge, strictness: 1.0}}
+  offline-judge-b: {provider: mock, model: heuristic-judge-b, family: google, options: {mode: judge, strictness: 1.2}}

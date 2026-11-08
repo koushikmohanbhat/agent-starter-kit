@@ -1,0 +1,16 @@
+project = "<gcp project id>"
+region  = "<region, e.g. asia-south1>"
+image   = "<region>-docker.pkg.dev/<project>/<repo>/support-agent:<tag>"
+environment = {
+  AGENT_FRAMEWORK   = "adk"
+  MODEL_PROVIDER    = "gemini"
+  MODEL_NAME        = "<gemini model id>"
+  KIT_AUTH          = "oidc"
+  KIT_OIDC_ISSUER   = "<https://your-idp>"
+  KIT_OIDC_AUDIENCE = "<audience>"
+}
+secrets = {
+  SESSION_STORE   = "<secret id holding postgresql+psycopg://... (Cloud SQL / AlloyDB)>"
+  ORDER_API_TOKEN = "<secret id>"
+}
+use_gemini = true

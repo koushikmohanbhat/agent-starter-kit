@@ -1,0 +1,25 @@
+# Local stack: agent service + Postgres sessions + mock order API. `docker compose up --build`, then:
+#   curl -s localhost:8080/v1/chat -H 'X-API-Key: local-dev-key' -H 'X-End-User-Id: cust-001' \
+#        -H 'Content-Type: application/json' -d '{"message":"Where is ORD-10003?"}'
+services:
+  agent:
+    build: {context: ., args: {EXTRAS: "openai,langgraph,adk,strands,postgres,otel"}}
+    ports: ["8080:8080"]
+    environment:
+      KIT_AUTH: api_key
+      KIT_API_KEYS: local-dev-key
+      AGENT_FRAMEWORK: ${AGENT_FRAMEWORK:-openai_agents}
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-scripted}
+      MODEL_NAME: ${MODEL_NAME:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SESSION_STORE: postgresql+psycopg://kit:kit@db:5432/kit
+      ORDER_API_URL: http://orders:8081
+    depends_on: {db: {condition: service_healthy}, orders: {condition: service_started}}
+  orders:
+    build: {context: .}
+    working_dir: /app
+    command: ["uvicorn", "mock_api.app:app", "--host", "0.0.0.0", "--port", "8081"]
+  db:
+    image: postgres:16-alpine
+    environment: {POSTGRES_USER: kit, POSTGRES_PASSWORD: kit, POSTGRES_DB: kit}
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U kit"], interval: 2s, retries: 20}

@@ -1,0 +1,11 @@
+# The kit's service API. Start it with KIT_TEST_MODE=true so each eval session gets its own sandbox and the reply
+# includes the turn's outcome (`state`) for the task_success grader. Never enable test mode in production.
+# .env: AGENT_KIT_URL (default local), AGENT_KIT_API_KEY, AGENT_KIT_EVAL_USER (the end user the cases act as)
+targets:
+  - name: agent
+    kind: http
+    options:
+      url: "${AGENT_KIT_URL:-http://127.0.0.1:8080}/v1/chat"
+      headers_env: {X-API-Key: AGENT_KIT_API_KEY, X-End-User-Id: AGENT_KIT_EVAL_USER}
+      body: {message: "{{ input }}"}
+      map: {output: message, trajectory: tool_calls, final_state: state, trace_id: trace_id, session_id: session_id}

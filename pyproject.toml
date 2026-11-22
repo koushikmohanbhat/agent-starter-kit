@@ -24,8 +24,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-openai = ["openai-agents>=0.24,<0.25"]
-litellm = ["openai-agents[litellm]>=0.24,<0.25"]
+openai = ["openai-agents>=0.24,<0.26"]
+litellm = ["openai-agents[litellm]>=0.24,<0.26"]
 langgraph = ["langgraph>=1.2,<2", "langchain-openai>=1.0,<2"]
 adk = ["google-adk>=2.14,<3; python_version >= '3.11'", "litellm>=1.70; python_version >= '3.11'"]   # ADK 2.12+ needs Python 3.11+
 strands = ["strands-agents[openai]>=1.64,<2"]
